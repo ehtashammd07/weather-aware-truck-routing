@@ -1,0 +1,33 @@
+services:
+  # Backend API Service (Django REST Framework)
+  - type: web
+    name: truck-weather-router-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn routing_project.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DEBUG
+        value: "True"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+
+  # Frontend Web UI (React + Vite)
+  - type: web
+    name: truck-weather-router-ui
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: truck-weather-router-api
+          property: host
